@@ -1,0 +1,77 @@
+# Canvas - Image processing server
+
+A complete solution for storing and processing images uploaded by users.
+
+Images are processed on the fly and cached for faster subsequent requests.
+
+## Configuration
+
+The server can be configured via environment variables. `.env` files are supported.
+
+- `CANVAS_UPLOAD_DIR` - where to store uploaded photos? (for example: `/mnt/images`)
+- `CANVAS_REDIS_URL` - url to Redis instance (for example: `redis://127.0.0.1:6379/`)
+- `CANVAS_WATERMARK_FILE_PATH` - optional path to the image to be used as the watermark (for example: `/home/user/watermark.png`)
+- `CANVAS_PORT` - optional port number (default: `3000`)
+
+## Redis configuration
+
+Processed photos will be saved to Redis to speed up recurring requests.
+
+Don't forget to set appropriate policies for storage size.
+
+Learn more:
+- [Key eviction](https://redis.io/docs/reference/eviction/)
+
+## API
+
+- `POST /images` - upload new photo
+
+Request:
+
+```bash
+curl -F 'image=@test.png' https://domain.tld/images
+```
+
+Response:
+
+```json
+{
+    "hash": "string"
+}
+```
+
+Error example:
+
+```json
+{
+    "status_code": 400,
+    "message": "What went wrong"
+}
+```
+
+- `GET /images/<hash>` - get a photo
+
+Optional query parameters:
+
+- `width`: desired width (default: original image width)
+- `height`: desired height (default: original image height)
+- `quality`: image quality (1-100, default: 80)
+- `watermark`: add a watermark? (true if the parameter is in the url, value doesn't matter)
+- `format`: image format (supported values: `jpg` (or `jpeg`), `webp`, default: `webp`)
+
+Example:
+```
+GET https://domain.tld/images/IMAGE_HASH?width=300&height=300&quality=75&watermark=y&format=jpg
+```
+
+## Image processing steps
+
+1. Apply rotation from exif tags.
+2. Resize the image so that the smaller side fits completely into the specified dimensions.
+3. Crop the image using a smart algorithm.
+4. Apply a watermark if required.
+5. Encode the photo in the required format, remove extra metadata.
+
+The server does not change the aspect ratio.
+
+If you specify a width and height, the resulting image will not necessarily be that size. The server does not upscale the photo.

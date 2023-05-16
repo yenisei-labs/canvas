@@ -1,0 +1,31 @@
+[package]
+name = "canvas"
+version = "0.0.1"
+edition = "2021"
+repository = "https://github.com/yenisei-labs/canvas"
+authors = ["Ivan <ordinarydev@protonmail.com>"]
+description = "Image processing server"
+readme = "readme.md"
+license = "MIT"
+keywords = ["image", "libvips", "web"]
+
+[dependencies]
+libvips = "1.5.1"
+num_cpus = "1.15.0"
+axum = { version = "0.6.18", features = ["multipart"] }
+hyper = { version = "0.14.26", features = ["full"] }
+tokio = { version = "1.28.1", features = ["full"] }
+tower = "0.4.13"
+serde = { version = "1.0.163", features = ["derive"] }
+serde_json = "1.0.96"
+sha2 = "0.10.6"
+dotenvy = "0.15.7"
+redis = { version = "0.23.0", features = ["tokio-comp"] }
+mobc = "0.8.1"
+mobc-redis = "0.8.0"
+anyhow = "1.0.71"
+futures = "0.3.28"
+axum-macros = "0.3.7"
+
+[profile.release]
+strip = "debuginfo"
