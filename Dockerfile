@@ -5,7 +5,7 @@ RUN apt install -y libvips-dev
 
 WORKDIR /app
 COPY . .
-RUN cargo build --release
+RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --release
 
 FROM debian:bullseye-20230502-slim
 
