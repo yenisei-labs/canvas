@@ -22,6 +22,30 @@ Don't forget to set appropriate policies for storage size.
 Learn more:
 - [Key eviction](https://redis.io/docs/reference/eviction/)
 
+## Docker-compose example
+```yml
+version: '3.8'
+
+services:
+  image-cache:
+    image: redis
+    # Edit the parameters for your needs
+    command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
+
+  canvas:
+    image: ghcr.io/yenisei-labs/canvas
+    environment:
+      - CANVAS_UPLOAD_DIR: "/data"
+      - CANVAS_REDIS_URL: "redis://image-cache:6379/"
+    volumes:
+      - images:/data
+    ports:
+      - 3000:3000
+
+volumes:
+  images:
+```
+
 ## API
 
 - `POST /images` - upload new photo
