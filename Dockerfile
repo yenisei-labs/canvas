@@ -8,7 +8,7 @@ RUN cargo build --release
 
 FROM debian:bullseye-20230502-slim
 
-RUN apt update && apt install -y libvips-dev libjpeg62-turbo-dev libexif-dev libwebp-dev libpng-dev
+RUN apt update && apt install -y pkg-config libvips-dev libjpeg62-turbo-dev libexif-dev libwebp-dev libpng-dev
 
 WORKDIR /app
 COPY --from=builder /app/target/release/canvas /app/canvas
