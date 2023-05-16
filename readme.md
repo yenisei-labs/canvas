@@ -73,6 +73,8 @@ Error example:
 }
 ```
 
+---
+
 - `GET /images/<hash>` - get a photo
 
 Optional query parameters:
@@ -87,6 +89,8 @@ Example:
 ```
 GET https://domain.tld/images/IMAGE_HASH?width=300&height=300&quality=75&watermark=y&format=jpg
 ```
+
+---
 
 - `GET /health` - get server status
 
