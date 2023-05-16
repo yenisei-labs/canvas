@@ -4,6 +4,10 @@ A complete solution for storing and processing images uploaded by users.
 
 Images are processed on the fly and cached for faster subsequent requests.
 
+| Canvas | v0.0.1 |
+| ---    | ---    |
+| Status | Alpha  |
+
 ## Configuration
 
 The server can be configured via environment variables. `.env` files are supported.
