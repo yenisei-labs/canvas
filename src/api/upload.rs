@@ -2,7 +2,7 @@ use crate::{AppState, HttpError};
 use axum::{
     body::Bytes,
     extract::{Multipart, State},
-    response::Json,
+    response::{IntoResponse, Json},
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -20,7 +20,7 @@ pub struct Response {
 pub async fn upload_image(
     State(state): State<Arc<AppState>>,
     mut multipart: Multipart,
-) -> Result<Json<Response>, HttpError> {
+) -> impl IntoResponse {
     // Get the first field
     let field = match multipart.next_field().await {
         Ok(field) => match field {
