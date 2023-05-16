@@ -88,6 +88,10 @@ Example:
 GET https://domain.tld/images/IMAGE_HASH?width=300&height=300&quality=75&watermark=y&format=jpg
 ```
 
+- `GET /health` - get server status
+
+Responds with 200 OK if the server is running. At the moment, there is no additional information.
+
 ## Image processing steps
 
 1. Apply rotation from exif tags.
