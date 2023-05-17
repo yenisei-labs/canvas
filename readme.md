@@ -39,8 +39,8 @@ services:
   canvas:
     image: ghcr.io/yenisei-labs/canvas
     environment:
-      - CANVAS_UPLOAD_DIR: "/data"
-      - CANVAS_REDIS_URL: "redis://image-cache:6379/"
+      CANVAS_UPLOAD_DIR: "/data"
+      CANVAS_REDIS_URL: "redis://image-cache:6379/"
     volumes:
       - images:/data
     ports:
