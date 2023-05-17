@@ -1,3 +1,5 @@
+# Thanks to https://github.com/olxgroup-oss/dali
+
 FROM rust:1.69-alpine3.17 AS builder
 
 RUN apk add --update --no-cache \
@@ -19,9 +21,9 @@ RUN apk add --update --no-cache \
     vips-heif=8.13.3-r1
 
 WORKDIR /app
-COPY --from=builder /app/target/release/canvas /app/canvas
+COPY --from=builder /app/target/release/canvas /usr/local/bin/canvas
 
-ENV CANVAS_PORT=3000
+ENV CANVAS_PORT="3000"
 EXPOSE 3000
 
-ENTRYPOINT ["/app/canvas"]
+ENTRYPOINT ["/usr/local/bin/canvas"]
