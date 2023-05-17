@@ -9,12 +9,25 @@ use axum::{
 };
 use libvips::{ops, VipsImage};
 use mobc_redis::redis::AsyncCommands;
-use std::{cmp, collections::HashMap, path::PathBuf, str::FromStr, sync::Arc};
+use std::{cmp, collections::HashMap, fmt, path::PathBuf, str::FromStr, sync::Arc};
 
 #[derive(Debug)]
 pub enum SupportedImageFormat {
     Webp,
     Jpeg,
+}
+
+impl fmt::Display for SupportedImageFormat {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                SupportedImageFormat::Jpeg => "jpeg",
+                SupportedImageFormat::Webp => "webp",
+            }
+        )
+    }
 }
 
 #[derive(Debug)]
@@ -111,16 +124,17 @@ pub async fn get_image(
 }
 
 /// Calculate unique ID for this image.
-/// It takes height, width, quality and watermark into account.
+/// It takes height, width, quality, format and watermark into account.
 /// Image ID will be used as a key for caching.
 pub fn get_image_id(hash: &str, props: &ImageProps) -> String {
     format!(
-        "{}-{}-{}-{}-{}",
+        "{}-{}-{}-{}-{}-{}",
         hash,
         props.width.unwrap_or(0),
         props.height.unwrap_or(0),
         props.quality.unwrap_or(0),
         props.watermark,
+        props.format,
     )
 }
 
