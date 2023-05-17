@@ -3,8 +3,8 @@ FROM rust:1.69-alpine3.17 AS builder
 RUN apk add --update --no-cache \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main \
-    musl-dev=1.2.4-r0 \
-    vips-dev=8.14.2-r3
+    musl-dev=1.2.3-r4 \
+    vips-dev=8.13.3-r1
 
 WORKDIR /app
 COPY . .
@@ -15,8 +15,8 @@ FROM alpine:3.17.3
 RUN apk add --update --no-cache \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main \
-    vips=8.14.2-r3 \
-    vips-heif=8.14.2-r3
+    vips=8.13.3-r1 \
+    vips-heif=8.13.3-r1
 
 WORKDIR /app
 COPY --from=builder /app/target/release/canvas /app/canvas
