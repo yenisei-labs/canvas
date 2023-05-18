@@ -236,10 +236,7 @@ fn get_jpeg_options(quality: u8) -> ops::JpegsaveBufferOptions {
 // Generate HTTP headers for the image.
 fn get_headers(format: &ImageFormat, image_id: &str, image_hash: &str) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    let ext = match format {
-        ImageFormat::Webp => "webp",
-        ImageFormat::Jpeg => "jpeg",
-    };
+    let ext = format.to_string();
     headers.insert(
         header::CONTENT_TYPE,
         format!("image/{ext}").parse().unwrap(),
