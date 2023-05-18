@@ -6,7 +6,8 @@ RUN apk add --update --no-cache \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main \
     musl-dev=1.2.3-r4 \
-    vips-dev=8.13.3-r1
+    vips-dev=8.13.3-r1 \
+    pango-dev=1.50.13-r0
 
 WORKDIR /app
 COPY . .
@@ -18,7 +19,8 @@ RUN apk add --update --no-cache \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main \
     vips=8.13.3-r1 \
-    vips-heif=8.13.3-r1
+    vips-heif=8.13.3-r1 \
+    pango=1.50.13-r0
 
 COPY roboto_regular.ttf /app/roboto_regular.ttf
 ENV CANVAS_FONT_FILE="/app/roboto_regular.ttf"
