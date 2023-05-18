@@ -37,6 +37,7 @@ pub struct ImageProps {
     pub quality: u8,
     pub watermark: bool,
     pub format: ImageFormat,
+    pub filename: Option<String>,
 }
 
 impl Default for ImageProps {
@@ -47,6 +48,7 @@ impl Default for ImageProps {
             quality: 80,
             watermark: false,
             format: ImageFormat::Webp,
+            filename: None,
         }
     }
 }
@@ -85,6 +87,10 @@ impl ImageProps {
             }
         }
 
+        if let Some(filename) = params.get("filename") {
+            image_props.filename = Some(filename.to_string());
+        }
+
         image_props
     }
 }
@@ -110,7 +116,7 @@ pub async fn get_image(
     // Check if-none-match header
     let image_props = ImageProps::from_params(&params);
     let image_id = get_image_id(&hash, &image_props);
-    let response_headers = get_headers(&image_props.format, &image_id, &hash);
+    let response_headers = get_headers(&image_props, &image_id, &hash);
     if headers.contains_key("If-None-Match") {
         println!("Found if-none-match header: {}", image_id);
         return Ok((StatusCode::NOT_MODIFIED, response_headers, Vec::new()));
@@ -234,20 +240,22 @@ fn get_jpeg_options(quality: u8) -> ops::JpegsaveBufferOptions {
 }
 
 // Generate HTTP headers for the image.
-fn get_headers(format: &ImageFormat, image_id: &str, image_hash: &str) -> HeaderMap {
+fn get_headers(props: &ImageProps, image_id: &str, image_hash: &str) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    let ext = format.to_string();
+
+    let ext = props.format.to_string();
+    let filename = match props.filename.clone() {
+        Some(filename) => filename,
+        None => format!("inline; filename=\"{image_hash}.{ext}\""),
+    };
+
     headers.insert(
         header::CONTENT_TYPE,
         format!("image/{ext}").parse().unwrap(),
     );
-    headers.insert(
-        header::CONTENT_DISPOSITION,
-        format!("inline; filename=\"{image_hash}.{ext}\"")
-            .parse()
-            .unwrap(),
-    );
+    headers.insert(header::CONTENT_DISPOSITION, filename.parse().unwrap());
     headers.insert(header::ETAG, image_id.parse().unwrap());
     headers.insert(header::CACHE_CONTROL, "max-age=604800".parse().unwrap());
+
     headers
 }

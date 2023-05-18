@@ -88,10 +88,11 @@ Optional query parameters:
 - `quality`: image quality (1-100, default: 80)
 - `watermark`: add a watermark? (true if the parameter is in the url, value doesn't matter)
 - `format`: image format (supported values: `jpg` (or `jpeg`), `webp`, default: `webp`)
+- `filename`: override the name of the returned file (default: hash.format)
 
 Example:
 ```
-GET https://domain.tld/images/IMAGE_HASH?width=300&height=300&quality=75&watermark=y&format=jpg
+GET https://domain.tld/images/IMAGE_HASH?width=300&height=300&quality=75&watermark=y&format=jpg&filename=photo.jpg
 ```
 
 ---
