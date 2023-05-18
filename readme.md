@@ -83,8 +83,8 @@ Error example:
 
 Optional query parameters:
 
-- `width`: desired width (default: original image width)
-- `height`: desired height (default: original image height)
+- `width`: desired width (default: 1024px)
+- `height`: desired height (default: 1024px)
 - `quality`: image quality (1-100, default: 80)
 - `watermark`: add a watermark? (true if the parameter is in the url, value doesn't matter)
 - `format`: image format (supported values: `jpg` (or `jpeg`), `webp`, default: `webp`)
