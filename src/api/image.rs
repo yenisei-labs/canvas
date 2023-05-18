@@ -9,22 +9,22 @@ use axum::{
 };
 use libvips::{ops, VipsImage};
 use mobc_redis::redis::AsyncCommands;
-use std::{cmp, collections::HashMap, fmt, path::PathBuf, str::FromStr, sync::Arc};
+use std::{cmp, collections::HashMap, fmt, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
-pub enum SupportedImageFormat {
+pub enum ImageFormat {
     Webp,
     Jpeg,
 }
 
-impl fmt::Display for SupportedImageFormat {
+impl fmt::Display for ImageFormat {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
             "{}",
             match self {
-                SupportedImageFormat::Jpeg => "jpeg",
-                SupportedImageFormat::Webp => "webp",
+                ImageFormat::Jpeg => "jpeg",
+                ImageFormat::Webp => "webp",
             }
         )
     }
@@ -32,45 +32,60 @@ impl fmt::Display for SupportedImageFormat {
 
 #[derive(Debug)]
 pub struct ImageProps {
-    pub width: Option<u16>,
-    pub height: Option<u16>,
-    pub quality: Option<u8>,
+    pub width: u16,
+    pub height: u16,
+    pub quality: u8,
     pub watermark: bool,
-    // Supported values: webp (default), jpg
-    pub format: SupportedImageFormat,
+    pub format: ImageFormat,
+}
+
+impl Default for ImageProps {
+    fn default() -> ImageProps {
+        ImageProps {
+            width: 1024,
+            height: 1024,
+            quality: 80,
+            watermark: false,
+            format: ImageFormat::Webp,
+        }
+    }
 }
 
 impl ImageProps {
     /// Parse URL parameters.
     fn from_params(params: &HashMap<String, String>) -> ImageProps {
-        ImageProps {
-            width: Self::parse_param(params.get("width")),
-            height: Self::parse_param(params.get("height")),
-            quality: Self::parse_param(params.get("quality")),
-            watermark: params.get("watermark").is_some(),
-            format: match params.get("format") {
-                Some(val) => match val.as_str() {
-                    "jpg" | "jpeg" => SupportedImageFormat::Jpeg,
-                    "webp" => SupportedImageFormat::Webp,
-                    _ => SupportedImageFormat::Webp,
-                },
-                None => SupportedImageFormat::Webp,
-            },
-        }
-    }
+        let mut image_props = ImageProps::default();
 
-    /// Convert optional parameter to number, ignore all errors.
-    fn parse_param<T>(param: Option<&String>) -> Option<T>
-    where
-        T: FromStr,
-    {
-        match param {
-            Some(val) => match val.parse::<T>() {
-                Ok(res) => Some(res),
-                Err(_) => None,
-            },
-            None => None,
+        if let Some(value) = params.get("width") {
+            if let Ok(width) = value.parse() {
+                image_props.width = width;
+            }
         }
+
+        if let Some(value) = params.get("height") {
+            if let Ok(height) = value.parse() {
+                image_props.height = height;
+            }
+        }
+
+        if let Some(value) = params.get("quality") {
+            if let Ok(quality) = value.parse() {
+                image_props.quality = quality;
+            }
+        }
+
+        if let Some(_) = params.get("watermark") {
+            image_props.watermark = true;
+        }
+
+        if let Some(value) = params.get("format") {
+            image_props.format = match value.as_str() {
+                "jpg" | "jpeg" => ImageFormat::Jpeg,
+                _ => ImageFormat::Webp,
+            }
+        }
+
+        image_props
     }
 }
 
@@ -129,12 +144,7 @@ pub async fn get_image(
 pub fn get_image_id(hash: &str, props: &ImageProps) -> String {
     format!(
         "{}-{}-{}-{}-{}-{}",
-        hash,
-        props.width.unwrap_or(0),
-        props.height.unwrap_or(0),
-        props.quality.unwrap_or(0),
-        props.watermark,
-        props.format,
+        hash, props.width, props.height, props.quality, props.watermark, props.format,
     )
 }
 
@@ -150,41 +160,22 @@ fn process_image(
     // Apply rotation from EXIF tag.
     let rotated_image = ops::autorot(&image)?;
 
-    // Crop image if needed.
-    let cropped_image = match image_props.width.is_some() || image_props.height.is_some() {
-        // The user specified a height or width
-        true => {
-            // Resize the image so that the smaller side of the image is fully visible
-            let original_width = rotated_image.get_width();
-            let original_height = rotated_image.get_height();
+    // Resize the image so that the smaller side of the image is fully visible
+    let original_width = rotated_image.get_width();
+    let original_height = rotated_image.get_height();
 
-            let width_scale_factor: f64 = match image_props.width {
-                Some(desired_width) => f64::from(desired_width) / f64::from(original_width),
-                None => 1.0,
-            };
-            let height_scale_factor: f64 = match image_props.height {
-                Some(desired_height) => f64::from(desired_height) / f64::from(original_height),
-                None => 1.0,
-            };
+    let width_scale_factor: f64 = f64::from(image_props.width) / f64::from(original_width);
+    let height_scale_factor: f64 = f64::from(image_props.height) / f64::from(original_height);
 
-            let min_factor = width_scale_factor.max(height_scale_factor).min(1.0);
-            let resized_image = ops::resize(&rotated_image, min_factor)?;
+    let min_factor = width_scale_factor.max(height_scale_factor).min(1.0);
+    let resized_image = ops::resize(&rotated_image, min_factor)?;
 
-            // Crop big side with smart algorithm
-            ops::smartcrop(
-                &resized_image,
-                match image_props.width {
-                    Some(val) => cmp::min(val.into(), resized_image.get_width()),
-                    None => resized_image.get_width(),
-                },
-                match image_props.height {
-                    Some(val) => cmp::min(val.into(), resized_image.get_height()),
-                    None => resized_image.get_height(),
-                },
-            )?
-        }
-        false => rotated_image,
-    };
+    // Crop big side with smart algorithm
+    let cropped_image = ops::smartcrop(
+        &resized_image,
+        cmp::min(image_props.width.into(), resized_image.get_width()),
+        cmp::min(image_props.height.into(), resized_image.get_height()),
+    )?;
 
     // Add watermark if needed.
     let image_with_watermark = match image_props.watermark {
@@ -205,12 +196,12 @@ fn process_image(
 
     // Encode image.
     match image_props.format {
-        SupportedImageFormat::Webp => {
+        ImageFormat::Webp => {
             let options = get_webp_options(image_props.quality);
             let buffer = ops::webpsave_buffer_with_opts(&image_with_watermark, &options)?;
             Ok(buffer)
         }
-        SupportedImageFormat::Jpeg => {
+        ImageFormat::Jpeg => {
             let options = get_jpeg_options(image_props.quality);
             let buffer = ops::jpegsave_buffer_with_opts(&image_with_watermark, &options)?;
             Ok(buffer)
@@ -218,10 +209,10 @@ fn process_image(
     }
 }
 
-fn get_webp_options(quality: Option<u8>) -> ops::WebpsaveBufferOptions {
+fn get_webp_options(quality: u8) -> ops::WebpsaveBufferOptions {
     ops::WebpsaveBufferOptions {
         // Quality
-        q: quality.unwrap_or(80).into(),
+        q: quality.into(),
         // Preset for lossy compression
         preset: ops::ForeignWebpPreset::Photo,
         // Strip all metadata from image
@@ -231,10 +222,10 @@ fn get_webp_options(quality: Option<u8>) -> ops::WebpsaveBufferOptions {
     }
 }
 
-fn get_jpeg_options(quality: Option<u8>) -> ops::JpegsaveBufferOptions {
+fn get_jpeg_options(quality: u8) -> ops::JpegsaveBufferOptions {
     ops::JpegsaveBufferOptions {
         // Quality
-        q: quality.unwrap_or(80).into(),
+        q: quality.into(),
         // Strip all metadata from image
         strip: true,
         // Default values
@@ -243,13 +234,13 @@ fn get_jpeg_options(quality: Option<u8>) -> ops::JpegsaveBufferOptions {
 }
 
 // Generate HTTP headers for the image.
-fn get_headers(format: &SupportedImageFormat, image_id: String) -> HeaderMap {
+fn get_headers(format: &ImageFormat, image_id: String) -> HeaderMap {
     let mut headers = HeaderMap::new();
     headers.insert(
         header::CONTENT_TYPE,
         match format {
-            SupportedImageFormat::Webp => "image/webp".parse().unwrap(),
-            SupportedImageFormat::Jpeg => "image/jpeg".parse().unwrap(),
+            ImageFormat::Webp => "image/webp".parse().unwrap(),
+            ImageFormat::Jpeg => "image/jpeg".parse().unwrap(),
         },
     );
     headers.insert(header::ETAG, image_id.parse().unwrap());
