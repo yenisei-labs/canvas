@@ -35,9 +35,13 @@ pub struct ImageProps {
     pub width: u16,
     pub height: u16,
     pub quality: u8,
+    /// Add a pre-configured watermark on top of a photo?
     pub watermark: bool,
     pub format: ImageFormat,
     pub filename: Option<String>,
+    /// Small text to be added to the top left corner.
+    /// Can be used instead of a watermark.
+    pub overlay: Option<String>,
 }
 
 impl Default for ImageProps {
@@ -49,6 +53,7 @@ impl Default for ImageProps {
             watermark: false,
             format: ImageFormat::Webp,
             filename: None,
+            overlay: None,
         }
     }
 }
@@ -89,6 +94,10 @@ impl ImageProps {
 
         if let Some(filename) = params.get("filename") {
             image_props.filename = Some(filename.to_string());
+        }
+
+        if let Some(overlay) = params.get("overlay") {
+            image_props.overlay = Some(overlay.to_string());
         }
 
         image_props
@@ -149,8 +158,14 @@ pub async fn get_image(
 /// Image ID will be used as a key for caching.
 pub fn get_image_id(hash: &str, props: &ImageProps) -> String {
     format!(
-        "{}-{}-{}-{}-{}-{}",
-        hash, props.width, props.height, props.quality, props.watermark, props.format,
+        "{}-{}-{}-{}-{}-{}-{}",
+        hash,
+        props.width,
+        props.height,
+        props.quality,
+        props.watermark,
+        props.format,
+        props.overlay.clone().unwrap_or("none".to_string())
     )
 }
 
@@ -200,16 +215,33 @@ fn process_image(
         false => cropped_image,
     };
 
+    // Add overlay.
+    let image_with_overlay = match &image_props.overlay {
+        Some(overlay) => {
+            let text = ops::text(&overlay)?;
+            let white = ops::copy_with_opts(
+                &VipsImage::new_from_image(&text, &[170.0, 170.0, 170.0])?,
+                &ops::CopyOptions {
+                    interpretation: ops::Interpretation::Srgb,
+                    ..ops::CopyOptions::default()
+                },
+            )?;
+            let overlay = ops::bandjoin(&mut [white, text])?;
+            ops::composite_2(&image_with_watermark, &overlay, ops::BlendMode::Screen)?
+        }
+        None => image_with_watermark,
+    };
+
     // Encode image.
     match image_props.format {
         ImageFormat::Webp => {
             let options = get_webp_options(image_props.quality);
-            let buffer = ops::webpsave_buffer_with_opts(&image_with_watermark, &options)?;
+            let buffer = ops::webpsave_buffer_with_opts(&image_with_overlay, &options)?;
             Ok(buffer)
         }
         ImageFormat::Jpeg => {
             let options = get_jpeg_options(image_props.quality);
-            let buffer = ops::jpegsave_buffer_with_opts(&image_with_watermark, &options)?;
+            let buffer = ops::jpegsave_buffer_with_opts(&image_with_overlay, &options)?;
             Ok(buffer)
         }
     }

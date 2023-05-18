@@ -89,6 +89,7 @@ Optional query parameters:
 - `watermark`: add a watermark? (true if the parameter is in the url, value doesn't matter)
 - `format`: image format (supported values: `jpg` (or `jpeg`), `webp`, default: `webp`)
 - `filename`: override the name of the returned file (default: hash.format)
+- `overlay`: small text to be added to the top left corner, can be used instead of a watermark
 
 Example:
 ```
