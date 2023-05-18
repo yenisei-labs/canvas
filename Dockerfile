@@ -20,6 +20,9 @@ RUN apk add --update --no-cache \
     vips=8.13.3-r1 \
     vips-heif=8.13.3-r1
 
+COPY roboto_regular.ttf /app/roboto_regular.ttf
+ENV CANVAS_FONT_FILE="/app/roboto_regular.ttf"
+
 WORKDIR /app
 COPY --from=builder /app/target/release/canvas /usr/local/bin/canvas
 

@@ -217,18 +217,28 @@ fn process_image(
 
     // Add overlay.
     let image_with_overlay = match &image_props.overlay {
-        Some(overlay) => {
-            let text = ops::text(&overlay)?;
-            let white = ops::copy_with_opts(
-                &VipsImage::new_from_image(&text, &[170.0, 170.0, 170.0])?,
-                &ops::CopyOptions {
-                    interpretation: ops::Interpretation::Srgb,
-                    ..ops::CopyOptions::default()
-                },
-            )?;
-            let overlay = ops::bandjoin(&mut [white, text])?;
-            ops::composite_2(&image_with_watermark, &overlay, ops::BlendMode::Screen)?
-        }
+        Some(overlay) => match &state.cfg.font_file {
+            Some(font_file) => {
+                let text = ops::text_with_opts(
+                    &overlay,
+                    &ops::TextOptions {
+                        font: "Roboto 12".to_string(),
+                        fontfile: font_file.to_string(),
+                        ..ops::TextOptions::default()
+                    },
+                )?;
+                let white = ops::copy_with_opts(
+                    &VipsImage::new_from_image(&text, &[170.0, 170.0, 170.0])?,
+                    &ops::CopyOptions {
+                        interpretation: ops::Interpretation::Srgb,
+                        ..ops::CopyOptions::default()
+                    },
+                )?;
+                let overlay = ops::bandjoin(&mut [white, text])?;
+                ops::composite_2(&image_with_watermark, &overlay, ops::BlendMode::Screen)?
+            }
+            None => image_with_watermark,
+        },
         None => image_with_watermark,
     };
 
@@ -285,7 +295,10 @@ fn get_headers(props: &ImageProps, image_id: &str, image_hash: &str) -> HeaderMa
         header::CONTENT_TYPE,
         format!("image/{ext}").parse().unwrap(),
     );
-    headers.insert(header::CONTENT_DISPOSITION, format!("inline; filename=\"{filename}\"").parse().unwrap());
+    headers.insert(
+        header::CONTENT_DISPOSITION,
+        format!("inline; filename=\"{filename}\"").parse().unwrap(),
+    );
     headers.insert(header::ETAG, image_id.parse().unwrap());
     headers.insert(header::CACHE_CONTROL, "max-age=604800".parse().unwrap());
 
