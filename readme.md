@@ -4,9 +4,9 @@ A complete solution for storing and processing images uploaded by users.
 
 Images are processed on the fly and cached for faster subsequent requests.
 
-| Canvas | v0.0.9 |
-| ---    | ---    |
-| Status | Alpha  |
+| Canvas | v0.0.10 |
+| ---    | ---     |
+| Status | Alpha   |
 
 ## Configuration
 

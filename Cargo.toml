@@ -1,6 +1,6 @@
 [package]
 name = "canvas"
-version = "0.0.9"
+version = "0.0.10"
 edition = "2021"
 repository = "https://github.com/yenisei-labs/canvas"
 authors = ["Ivan <ordinarydev@protonmail.com>"]
