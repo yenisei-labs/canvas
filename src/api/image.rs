@@ -278,14 +278,14 @@ fn get_headers(props: &ImageProps, image_id: &str, image_hash: &str) -> HeaderMa
     let ext = props.format.to_string();
     let filename = match props.filename.clone() {
         Some(filename) => filename,
-        None => format!("inline; filename=\"{image_hash}.{ext}\""),
+        None => format!("{image_hash}.{ext}"),
     };
 
     headers.insert(
         header::CONTENT_TYPE,
         format!("image/{ext}").parse().unwrap(),
     );
-    headers.insert(header::CONTENT_DISPOSITION, filename.parse().unwrap());
+    headers.insert(header::CONTENT_DISPOSITION, format!("inline; filename=\"{filename}\"").parse().unwrap());
     headers.insert(header::ETAG, image_id.parse().unwrap());
     headers.insert(header::CACHE_CONTROL, "max-age=604800".parse().unwrap());
 
