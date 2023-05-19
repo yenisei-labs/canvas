@@ -11,7 +11,7 @@ RUN apk add --update --no-cache \
 
 WORKDIR /app
 COPY . .
-RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips pangocairo --libs)" cargo build --release
+RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --release
 
 FROM alpine:3.17.3
 
@@ -20,14 +20,12 @@ RUN apk add --update --no-cache \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main \
     vips=8.13.3-r1 \
     vips-heif=8.13.3-r1 \
-    pango=1.50.13-r0
+    pango=1.50.13-r0 \
+    font-roboto=3.004-r0
 
-COPY roboto_regular.ttf /app/roboto_regular.ttf
-ENV CANVAS_FONT_FILE="/app/roboto_regular.ttf"
-
-WORKDIR /app
 COPY --from=builder /app/target/release/canvas /usr/local/bin/canvas
 
+ENV CANVAS_FONT_FILE="/usr/share/fonts/roboto/Roboto-Regular.ttf"
 ENV CANVAS_PORT="3000"
 EXPOSE 3000
 
