@@ -11,7 +11,7 @@ RUN apk add --update --no-cache \
 
 WORKDIR /app
 COPY . .
-RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --release
+RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips pangocairo --libs)" cargo build --release
 
 FROM alpine:3.17.3
 
