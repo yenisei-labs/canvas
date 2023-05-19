@@ -13,8 +13,6 @@ pub struct Config {
     pub redis_url: String,
     /// Watermark file path (example: '/app/watermark.png')
     pub watermark_file_path: Option<String>,
-    /// Optional path to font file
-    pub font_file: Option<String>,
 }
 
 impl Config {
@@ -32,7 +30,6 @@ impl Config {
                 .expect("CANVAS_PORT is not a number"),
             redis_url: env::var("CANVAS_REDIS_URL").unwrap_or("redis://127.0.0.1/".to_string()),
             watermark_file_path: env::var("CANVAS_WATERMARK_FILE_PATH").ok(),
-            font_file: env::var("CANVAS_FONT_FILE").ok(),
         }
     }
 }

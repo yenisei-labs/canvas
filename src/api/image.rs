@@ -217,28 +217,18 @@ fn process_image(
 
     // Add overlay.
     let image_with_overlay = match &image_props.overlay {
-        Some(overlay) => match &state.cfg.font_file {
-            Some(font_file) => {
-                let text = ops::text_with_opts(
-                    &overlay,
-                    &ops::TextOptions {
-                        font: "Roboto 12".to_string(),
-                        fontfile: font_file.to_string(),
-                        ..ops::TextOptions::default()
-                    },
-                )?;
-                let white = ops::copy_with_opts(
-                    &VipsImage::new_from_image(&text, &[170.0, 170.0, 170.0])?,
-                    &ops::CopyOptions {
-                        interpretation: ops::Interpretation::Srgb,
-                        ..ops::CopyOptions::default()
-                    },
-                )?;
-                let overlay = ops::bandjoin(&mut [white, text])?;
-                ops::composite_2(&image_with_watermark, &overlay, ops::BlendMode::Screen)?
-            }
-            None => image_with_watermark,
-        },
+        Some(overlay) => {
+            let text = ops::text(&overlay)?;
+            let white = ops::copy_with_opts(
+                &VipsImage::new_from_image(&text, &[170.0, 170.0, 170.0])?,
+                &ops::CopyOptions {
+                    interpretation: ops::Interpretation::Srgb,
+                    ..ops::CopyOptions::default()
+                },
+            )?;
+            let overlay = ops::bandjoin(&mut [white, text])?;
+            ops::composite_2(&image_with_watermark, &overlay, ops::BlendMode::Screen)?
+        }
         None => image_with_watermark,
     };
 

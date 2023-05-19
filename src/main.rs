@@ -28,8 +28,7 @@ mod state;
 
 #[tokio::main]
 async fn main() {
-    // Initialize pangocairo (required for text rendering).
-    let _font_map = pangocairo::FontMap::default();
+    // Initialize gobject (required for text rendering).
 
     // Initialize libvips.
     let libvipsapp = VipsApp::new("Test Libvips", false).unwrap();

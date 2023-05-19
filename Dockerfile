@@ -25,7 +25,6 @@ RUN apk add --update --no-cache \
 
 COPY --from=builder /app/target/release/canvas /usr/local/bin/canvas
 
-ENV CANVAS_FONT_FILE="/usr/share/fonts/roboto/Roboto-Regular.ttf"
 ENV CANVAS_PORT="3000"
 EXPOSE 3000
 
