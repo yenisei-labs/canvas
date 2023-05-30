@@ -72,7 +72,6 @@ pub async fn upload_image(
 
 fn get_file_hash(data: &Bytes) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(&data);
-    let hash = format!("{:x}", hasher.finalize());
-    return hash;
+    hasher.update(data);
+    format!("{:x}", hasher.finalize())
 }

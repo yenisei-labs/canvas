@@ -24,7 +24,7 @@ impl AppState {
         // Preload watermark
         let watermark = match &cfg.watermark_file_path {
             Some(path) => {
-                let image = VipsImage::new_from_file(&path).unwrap();
+                let image = VipsImage::new_from_file(path).unwrap();
                 Some(image.image_write_to_buffer(".png").unwrap())
             }
             None => None,
@@ -39,6 +39,6 @@ impl AppState {
 
     /// Get path to uploaded file by hash (id).
     pub fn get_file_path(&self, hash: &str) -> PathBuf {
-        Path::new(&self.cfg.upload_dir).join(hash.clone())
+        Path::new(&self.cfg.upload_dir).join(hash)
     }
 }

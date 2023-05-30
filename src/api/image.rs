@@ -81,7 +81,7 @@ impl ImageProps {
             }
         }
 
-        if let Some(_) = params.get("watermark") {
+        if params.get("watermark").is_some() {
             image_props.watermark = true;
         }
 
@@ -203,7 +203,7 @@ fn process_image(
         true => match &state.watermark {
             Some(watermark_buffer) => {
                 // I have to load this picture every time again, because it cannot be passed between threads.
-                let watermark = VipsImage::new_from_buffer(&watermark_buffer, "")?;
+                let watermark = VipsImage::new_from_buffer(watermark_buffer, "")?;
 
                 // Join images.
                 ops::composite_2(&cropped_image, &watermark, ops::BlendMode::Screen)?
@@ -218,7 +218,7 @@ fn process_image(
     // Add overlay.
     let image_with_overlay = match &image_props.overlay {
         Some(overlay) => {
-            let text = ops::text(&overlay)?;
+            let text = ops::text(overlay)?;
             let white = ops::copy_with_opts(
                 &VipsImage::new_from_image(&text, &[170.0, 170.0, 170.0])?,
                 &ops::CopyOptions {
