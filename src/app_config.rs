@@ -13,6 +13,13 @@ pub struct AppConfig {
     pub redis_url: String,
     /// Watermark file path (example: '/app/watermark.png')
     pub watermark_file_path: Option<String>,
+    /// List of addresses to be specified in the 'Access-Control-Allow-Origin' header.
+    /// Separate addresses with spaces.
+    /// 
+    /// Example: "http://example.com http://api.example.com"
+    ///
+    /// If no addresses are given, the header value will be "*".
+    pub allowed_origins: Option<Vec<String>>,
 }
 
 pub fn get_config() -> anyhow::Result<AppConfig> {
@@ -26,7 +33,8 @@ pub fn get_config() -> anyhow::Result<AppConfig> {
         .add_source(
             config::Environment::with_prefix("CANVAS")
                 .try_parsing(true)
-                .separator("_"),
+                .separator("_")
+                .list_separator(" "),
         )
         .build()?;
 

@@ -13,7 +13,9 @@ use libvips::VipsApp;
 use mobc::Pool;
 use mobc_redis::RedisConnectionManager;
 use std::fs;
+use std::time::Duration;
 use tower_http::cors::{Any, CorsLayer};
+use hyper::http::HeaderValue;
 
 // Re-exports
 pub use app_config::AppConfig;
@@ -51,11 +53,25 @@ async fn main() {
     // Initialize axum.
 
     // Configure CORS layer.
-    let cors = CorsLayer::new()
+    let mut cors = CorsLayer::new()
         // allow `GET` and `POST` when accessing the resource
-        .allow_methods([Method::GET, Method::POST])
-        // allow requests from any origin
-        .allow_origin(Any);
+        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+        .allow_headers(Any)
+        .max_age(Duration::from_secs(60) * 10);
+
+    match cfg.allowed_origins {
+        Some(raw_list) => {
+            let mut origins: Vec<HeaderValue> = Vec::new();
+            for origin in raw_list.iter() {
+                origins.push(origin.parse().unwrap());
+            }
+            cors = cors.allow_origin(origins);
+        },
+        None => {
+            // allow requests from any origin
+            cors = cors.allow_origin(Any);
+        },
+    };
 
     let axumapp = Router::new()
         .route("/health", get(api::health::get_health))
