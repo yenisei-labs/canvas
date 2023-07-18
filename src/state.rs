@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::app_config::AppConfig;
 use libvips::VipsImage;
 use mobc::Pool;
 use mobc_redis::RedisConnectionManager;
@@ -10,7 +10,7 @@ use std::{
 /// Shared application state.
 pub struct AppState {
     /// Server configuration.
-    pub cfg: Config,
+    pub cfg: AppConfig,
     /// Redis connection pool.
     pub redis: Pool<RedisConnectionManager>,
     /// Buffer with watermark.
@@ -20,7 +20,7 @@ pub struct AppState {
 
 impl AppState {
     /// Create new instance of application state.
-    pub fn new(cfg: Config, redis: Pool<RedisConnectionManager>) -> Arc<AppState> {
+    pub fn new(cfg: AppConfig, redis: Pool<RedisConnectionManager>) -> Arc<AppState> {
         // Preload watermark
         let watermark = match &cfg.watermark_file_path {
             Some(path) => {

@@ -16,20 +16,18 @@ use std::fs;
 use tower_http::cors::{Any, CorsLayer};
 
 // Re-exports
-pub use config::Config;
+pub use app_config::AppConfig;
 pub use error::HttpError;
 pub use state::AppState;
 
 // Modules
 mod api;
-mod config;
+mod app_config;
 mod error;
 mod state;
 
 #[tokio::main]
 async fn main() {
-    // Initialize gobject (required for text rendering).
-
     // Initialize libvips.
     let libvipsapp = VipsApp::new("Test Libvips", false).unwrap();
     let cpu_num: i32 = num_cpus::get().try_into().unwrap();
@@ -37,7 +35,7 @@ async fn main() {
     libvipsapp.concurrency_set(cpu_num);
 
     // Read configuration.
-    let cfg = Config::new();
+    let cfg = app_config::get_config().unwrap();
     fs::create_dir_all(cfg.upload_dir.clone()).unwrap();
 
     // Connect to redis.
