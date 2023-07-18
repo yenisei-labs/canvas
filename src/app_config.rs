@@ -20,6 +20,9 @@ pub struct AppConfig {
     ///
     /// If no addresses are given, the header value will be "*".
     pub allowed_origins: Option<Vec<String>>,
+    /// Print debug information about requests?
+    /// Adds 'TraceLayer' to the application.
+    pub enable_tracing: bool
 }
 
 pub fn get_config() -> anyhow::Result<AppConfig> {
@@ -30,6 +33,7 @@ pub fn get_config() -> anyhow::Result<AppConfig> {
         .set_default("file_size_limit_kb", 4096)?
         .set_default("port", 3000)?
         .set_default("redis_url", "redis://127.0.0.1/")?
+        .set_default("enable_tracing", true)?
         .add_source(
             config::Environment::with_prefix("CANVAS")
                 .try_parsing(true)

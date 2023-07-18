@@ -15,7 +15,9 @@ use mobc_redis::RedisConnectionManager;
 use std::fs;
 use std::time::Duration;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace::TraceLayer;
 use hyper::http::HeaderValue;
+use log::{info, warn};
 
 // Re-exports
 pub use app_config::AppConfig;
@@ -30,10 +32,12 @@ mod state;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     // Initialize libvips.
     let libvipsapp = VipsApp::new("Test Libvips", false).unwrap();
     let cpu_num: i32 = num_cpus::get().try_into().unwrap();
-    println!("Starting {cpu_num} workers");
+    info!("Starting {cpu_num} workers");
     libvipsapp.concurrency_set(cpu_num);
 
     // Read configuration.
@@ -68,18 +72,22 @@ async fn main() {
             cors = cors.allow_origin(origins);
         },
         None => {
-            // allow requests from any origin
+            warn!("CORS: all origins are allowed");
             cors = cors.allow_origin(Any);
         },
     };
 
-    let axumapp = Router::new()
+    let mut axumapp = Router::new()
         .route("/health", get(api::health::get_health))
         .route("/images", post(api::upload::upload_image))
         .route("/images/:hash", get(api::image::get_image))
         .layer(DefaultBodyLimit::max(1024 * cfg.file_size_limit_kb))
         .layer(cors)
         .with_state(state);
+
+    if cfg.enable_tracing {
+        axumapp = axumapp.layer(TraceLayer::new_for_http());
+    }
 
     Server::bind(&format!("0.0.0.0:{}", cfg.port).parse().unwrap())
         .serve(axumapp.into_make_service())

@@ -16,7 +16,7 @@ axum = { version = "0.6.18", features = ["multipart"] }
 hyper = { version = "0.14.27", features = ["full"] }
 tokio = { version = "1.29.1", features = ["full"] }
 tower = "0.4.13"
-tower-http = { version = "0.4.1", features = ["cors"] }
+tower-http = { version = "0.4.1", features = ["cors", "trace"] }
 serde = { version = "1.0.164", features = ["derive"] }
 serde_json = "1.0.103"
 sha2 = "0.10.7"
@@ -28,6 +28,9 @@ anyhow = "1.0.71"
 futures = "0.3.28"
 axum-macros = "0.3.7"
 config = "0.13.1"
+
+log = "0.4.19"
+env_logger = "0.10.0"
 
 [profile.release]
 strip = "debuginfo"
